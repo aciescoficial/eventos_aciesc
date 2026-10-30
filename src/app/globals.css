@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Identidade visual ACIESC (seção 3 do CLAUDE.md). */
+@theme {
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  --color-green-900: #04231a;
+  --color-green-800: #07211b;
+  --color-green-700: #0e362c;
+  --color-green-600: #155f4b;
+  --color-brand: #1e7a5f;
+  --color-accent: #22e06c;
+  --color-accent-strong: #12c25b;
+  --color-on-accent: #04231a;
+
+  --color-ink: #0e2a22;
+  --color-muted: #51695f;
+  --color-line: #dceee4;
+  --color-bg: #f2faf6;
+  --color-tint: #e3f6eb;
+
+  --color-pending-bg: #fff4db;
+  --color-pending-fg: #6b4600;
+  --color-error-bg: #fdecea;
+  --color-error-fg: #8a1c12;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility bg-hero {
+  background: linear-gradient(100deg, #07211b 0%, #0e362c 45%, #155f4b 100%);
+}
+
+/* Botão principal: pílula em degradê verde-vivo com texto escuro. */
+@utility btn-primary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.625rem 1.5rem;
+  font-weight: 700;
+  color: var(--color-on-accent);
+  background: linear-gradient(135deg, #4ff08d 0%, #22e06c 55%, #12c25b 100%);
+  box-shadow: 0 8px 26px rgb(34 224 108 / 0.42);
+  font-weight: 800;
+  transition: filter 150ms;
+  &:hover {
+    filter: brightness(1.05);
+  }
+  &:focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }

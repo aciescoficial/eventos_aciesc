@@ -1,38 +1,51 @@
 name: Build & Deploy → eventos.aciesc.com.br
 
+# Roda a cada push na main, manualmente, ou quando um evento é publicado
+# (repository_dispatch "rebuild" disparado pelo Supabase).
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  repository_dispatch:
+    types: [rebuild]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://eventos.aciesc.com.br' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Avisar se o Supabase ainda não foi configurado
+        if: env.NEXT_PUBLIC_SUPABASE_URL == ''
+        run: echo "::warning::Variáveis SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY não definidas — o site sobe, mas sem dados nem login."
 
-      - name: Build (static export)
-        run: npm run build
-
-      - name: Deploy via FTP to KingHost
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./out/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
+      - name: Enviar out/ por FTP (KingHost)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          # Aceita o diretório com ou sem barra final; remove "ftp://" se vier no host.
+          host="${FTP_SERVER#ftp://}"; host="${host%/}"
+          dir="${FTP_SERVER_DIR%/}"; dir="${dir:-.}"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$host" -e "
+            set ftp:ssl-allow yes; set ssl:verify-certificate no;
+            set net:max-retries 2; set net:timeout 30;
+            mirror --reverse --only-newer --verbose --parallel=4 out/ $dir/;
+            quit"

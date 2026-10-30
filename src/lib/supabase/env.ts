@@ -1,0 +1,11 @@
+// Apenas variáveis públicas, embutidas no build. Chaves secretas vivem só nas Edge Functions.
+export function supabaseEnv() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) {
+    throw new Error(
+      "Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (veja .env.example).",
+    );
+  }
+  return { url, publishableKey };
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Portaria ACIESC",
+  "short_name": "Portaria",
+  "description": "Check-in de eventos da ACIESC",
+  "start_url": "/admin/portaria/",
+  "scope": "/admin/portaria/",
+  "display": "standalone",
+  "background_color": "#04231A",
+  "theme_color": "#07211B",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

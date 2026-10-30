@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ACIESC Eventos
 
-## Getting Started
+Plataforma de eventos da ACIESC (`eventos.aciesc.com.br`). Especificação completa e decisões em [CLAUDE.md](CLAUDE.md).
 
-First, run the development server:
+## Rodar localmente
+
+Requer Node 20.9+ e Docker.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:start            # Supabase local
+cp .env.example .env.local  # preencha a PUBLISHABLE_KEY de `npx supabase status -o env`
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+E-mails de login (link mágico) chegam no Mailpit local: http://127.0.0.1:54324.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Para dar acesso ao painel a um usuário local:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker exec supabase_db_aciesc-eventos psql -U postgres -c \
+  "insert into public.user_roles (user_id, role) select id, 'admin' from auth.users where email = 'voce@exemplo.com';"
+```
 
-## Learn More
+## Produção (Supabase remoto)
 
-To learn more about Next.js, take a look at the following resources:
+1. `npx supabase link --project-ref <ref>` e `npx supabase db push` (aplica as migrations).
+2. Edge Functions: `npx supabase functions deploy` e `npx supabase secrets set --env-file supabase/functions/.env` (modelo em `supabase/functions/.env.example`).
+3. Vault (SQL Editor): `select vault.create_secret('https://<ref>.supabase.co', 'project_url'); select vault.create_secret('<mesmo CRON_SECRET>', 'cron_secret');` — habilita o envio de mensagens e o rebuild automático.
+4. Auth → URL Configuration: Site URL `https://eventos.aciesc.com.br` e redirect `https://eventos.aciesc.com.br/auth/callback/**`. SMTP próprio (Resend) para os e-mails de login.
+5. Configurações no painel (`/admin/configuracoes/`): `site_url`, WhatsApp de ajuda, assinatura do certificado etc.
+6. Primeiro admin: entre no site uma vez e rode `insert into public.user_roles (user_id, role) select id, 'admin' from auth.users where email = '...';`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Verificações
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`npm run lint` · `npm run typecheck` · `npm test` · `npm run test:db`
 
-## Deploy on Vercel
+## Deploy (KingHost)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+O site é estático: `npm run build` gera `out/`, que é enviado por FTP pelo workflow `.github/workflows/deploy.yml` (push na `main`, execução manual ou `repository_dispatch` do tipo `rebuild`). Configure no GitHub os secrets `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD` e as variables `FTP_DIR`, `SITE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Para testar localmente como em produção: `npm run build && npm run preview:static` (http://localhost:3001).
