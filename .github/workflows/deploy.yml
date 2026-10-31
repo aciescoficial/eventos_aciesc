@@ -48,5 +48,6 @@ jobs:
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$host" -e "
             set ftp:ssl-allow yes; set ssl:verify-certificate no;
             set net:max-retries 2; set net:timeout 30;
+            pwd; cls -1;
             mirror --reverse --only-newer --verbose --parallel=4 out/ $dir/;
             quit"
