@@ -23,7 +23,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npx --yes deno@2.9.6 check supabase/functions/*/index.ts
+      - run: npx --yes deno@2.9.6 check --node-modules-dir=none supabase/functions/*/index.ts
 
   database:
     runs-on: ubuntu-latest
