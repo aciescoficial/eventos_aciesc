@@ -175,7 +175,12 @@ function Editor() {
   const params = useSearchParams();
   const router = useRouter();
   const id = params.get("id");
-  const [d, setD] = useState<Draft | null>(id ? null : newDraft((params.get("tipo") as Draft["kind"]) ?? "free_course"));
+  const [d, setD] = useState<Draft | null>(() => {
+    if (id) return null;
+    const draft = newDraft((params.get("tipo") as Draft["kind"]) ?? "free_course");
+    const format = params.get("formato");
+    return format === "online" || format === "in_person" || format === "hybrid" ? { ...draft, format } : draft;
+  });
   const original = useRef<{ dates: string[]; speakers: string[]; types: string[]; lots: string[]; questions: string[] }>({ dates: [], speakers: [], types: [], lots: [], questions: [] });
   const [venues, setVenues] = useState<Venue[]>([]);
   const [newVenue, setNewVenue] = useState<Omit<Venue, "id"> | null>(null);

@@ -23,6 +23,23 @@
   --color-pending-fg: #6b4600;
   --color-error-bg: #fdecea;
   --color-error-fg: #8a1c12;
+
+  /* Tokens do protótipo aprovado (canvas "ACIESC Eventos — Protótipo"). */
+  --color-pine: #256958;
+  --color-pine-dark: #1c5246;
+  --color-mist: #eaf2ef;
+  --color-sage: #9dbfb5;
+  --color-panel: #f3f5f4;
+  --color-panel-row: #f6f8f7;
+  --color-rule: #dde3e0;
+  --color-rule-soft: #eef2f0;
+  --color-field: #c9d3cf;
+  --color-ink-2: #14201c;
+  --color-text-2: #3a4743;
+  --color-text-3: #55625d;
+  --color-lime: #3be58a;
+  --color-lime-ink: #062a1c;
+  --color-amber: #8a5a00;
 }
 
 @layer base {
@@ -61,5 +78,50 @@
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+}
+
+/* Cabeçalho do painel (protótipo). */
+@utility bg-org-header {
+  background: linear-gradient(90deg, #0b2e25 0%, #0f4434 55%, #13604a 100%);
+}
+
+/* Botão principal do protótipo: pílula verde-limão. */
+@utility btn-lime {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #062a1c;
+  background: linear-gradient(135deg, #3be58a 0%, #1fc46a 100%);
+  box-shadow: 0 8px 22px rgb(31 196 106 / 0.32);
+  &:hover {
+    background: linear-gradient(135deg, #55f09e 0%, #22d36b 100%);
+  }
+  &:focus-visible {
+    outline: 3px solid #14201c;
+    outline-offset: 2px;
+  }
+}
+
+/* Botão contornado do protótipo. */
+@utility btn-outline {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid #256958;
+  background: #fff;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #256958;
+  &:hover {
+    background: #eaf2ef;
   }
 }

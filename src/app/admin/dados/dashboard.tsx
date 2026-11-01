@@ -56,9 +56,9 @@ function Content() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
             <Stat label="Inscrições" value={d.registrations} hint={`${d.free} gratuitas · ${d.paid} pagas`} />
             <Stat label="Comparecimento" value={d.registrations ? `${Math.round((d.checked_in / d.registrations) * 100)}%` : "—"} hint={`${d.checked_in} check-ins`} />
-            <Stat label="Certificados" value={d.certificates} />
+            <div id="certificados" className="scroll-mt-6"><Stat label="Certificados" value={d.certificates} /></div>
             <Stat label="Horas certificadas" value={`${Number(d.hours)}h`} />
-            <Stat label="Receita" value={moneyPlain(d.revenue)} />
+            <div id="financeiro" className="scroll-mt-6"><Stat label="Receita" value={moneyPlain(d.revenue)} /></div>
             <Stat label="Associados que nunca vieram" value={d.associates_never} hint={<button type="button" className="font-semibold text-brand underline" onClick={exportNever}>Exportar</button>} />
           </div>
           <div className="grid gap-4 lg:grid-cols-2">

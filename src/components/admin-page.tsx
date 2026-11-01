@@ -7,13 +7,75 @@ import { hasAnyRole, useCurrentUser, type AppRole, type CurrentUser } from "@/li
 import { getSupabase } from "@/lib/supabase/client";
 import { Spinner, cx } from "./ui";
 
-const NAV: { href: string; label: string; roles: AppRole[] }[] = [
-  { href: "/admin/", label: "Eventos", roles: ["organizer", "finance"] },
-  { href: "/admin/dados/", label: "Dados", roles: ["organizer", "finance"] },
-  { href: "/admin/base/", label: "Base ACIESC", roles: ["organizer", "finance"] },
-  { href: "/admin/portaria/", label: "Portaria", roles: ["organizer", "door"] },
-  { href: "/admin/configuracoes/", label: "Configurações", roles: ["admin"] },
+// Menu lateral conforme o protótipo aprovado ("A · Início — meus eventos").
+const NAV: { href: string; label: string; roles: AppRole[]; icon: ReactNode; match?: (path: string) => boolean }[] = [
+  {
+    href: "/admin/",
+    label: "Início",
+    roles: ["organizer", "finance"],
+    match: (p) => p === "/admin/" || p.startsWith("/admin/evento") || p.startsWith("/admin/participantes"),
+    icon: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
+  },
+  {
+    href: "/admin/dados/",
+    label: "Dados",
+    roles: ["organizer", "finance"],
+    icon: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M8 16v-4M12 16V8M16 16v-6" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/base/",
+    label: "Base ACIESC",
+    roles: ["organizer", "finance"],
+    match: (p) => p.startsWith("/admin/base") || p.startsWith("/admin/pessoa"),
+    icon: <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />,
+  },
+  {
+    href: "/admin/dados/#certificados",
+    label: "Certificados",
+    roles: ["organizer", "finance"],
+    match: () => false,
+    icon: (
+      <>
+        <circle cx="12" cy="9" r="6" />
+        <path d="M8.5 14L7 22l5-3 5 3-1.5-8" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/dados/#financeiro",
+    label: "Financeiro",
+    roles: ["organizer", "finance"],
+    match: () => false,
+    icon: (
+      <>
+        <rect x="2" y="6" width="20" height="13" rx="2" />
+        <path d="M2 10h20M6 15h4" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/configuracoes/",
+    label: "Equipe e permissões",
+    roles: ["admin"],
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="3.5" />
+        <path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2" />
+      </>
+    ),
+  },
 ];
+
+function initials(email: string | null) {
+  const name = (email ?? "").split("@")[0].replace(/[^a-zA-Z]+/g, " ").trim();
+  const parts = name.split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "A") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase();
+}
 
 function canSee(user: CurrentUser, roles: AppRole[]) {
   if (roles.includes("door")) return user.roles.length > 0 && (hasAnyRole(user, roles) || user.roles.some((r) => r.role === "door"));
@@ -27,7 +89,7 @@ export function AdminPage({
   actions,
   children,
 }: {
-  title: ReactNode;
+  title?: ReactNode;
   roles?: AppRole[];
   actions?: ReactNode;
   children: (user: CurrentUser) => ReactNode;
@@ -45,55 +107,87 @@ export function AdminPage({
   }, [auth, allowed, router, path]);
 
   return (
-    <>
-      <header className="bg-green-900 text-white print:hidden">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <Link href="/admin/" className="flex min-h-11 items-center gap-3" aria-label="Painel ACIESC — início">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-aciesc.webp" alt="ACIESC" width={209} height={77} className="h-8 w-auto" />
-            <span className="border-l border-white/25 pl-3 text-xs font-semibold uppercase tracking-widest text-accent">Painel</span>
-          </Link>
-          <div className="flex items-center gap-1 text-sm">
-            <Link href="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-white/80 hover:text-white">Ver site</Link>
-            <button
-              type="button"
-              className="inline-flex min-h-11 items-center rounded-full px-3 text-white/80 hover:text-white"
-              onClick={() => getSupabase().auth.signOut().then(() => router.replace("/"))}
-            >
-              Sair
-            </button>
+    <div className="flex min-h-full flex-1 flex-col bg-panel text-ink-2">
+      <header className="bg-org-header text-white print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3.5 px-6 py-3">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/" aria-label="ACIESC — início do organizador">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-aciesc.webp" alt="ACIESC" width={209} height={77} className="block h-11 w-auto" />
+            </Link>
+            <span aria-hidden className="h-[30px] w-px bg-white/25" />
+            <span className="text-[13px] font-bold uppercase tracking-[.08em] text-lime">Área do organizador</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Link href="/" className="inline-flex min-h-11 items-center px-1 text-sm font-semibold text-white hover:underline">
+              Ver vitrine pública
+            </Link>
+            {auth.status === "ready" && (
+              <>
+                <span
+                  aria-hidden
+                  title={auth.user.email ?? undefined}
+                  className="flex size-10 items-center justify-center rounded-full bg-lime text-sm font-bold text-lime-ink"
+                >
+                  {initials(auth.user.email)}
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-white/80 hover:text-white"
+                  onClick={() => getSupabase().auth.signOut().then(() => router.replace("/"))}
+                >
+                  Sair
+                </button>
+              </>
+            )}
           </div>
         </div>
+      </header>
+
+      <div className="flex flex-1 flex-col md:flex-row">
         {auth.status === "ready" && (
-          <nav aria-label="Painel" className="mx-auto flex w-full max-w-7xl gap-1 overflow-x-auto px-4 pb-2">
+          <nav
+            aria-label="Menu do organizador"
+            className="flex shrink-0 gap-1 overflow-x-auto border-b border-rule bg-white px-3.5 py-3 md:w-[230px] md:flex-col md:overflow-visible md:border-r md:border-b-0 md:py-5 print:hidden"
+          >
             {NAV.filter((n) => canSee(auth.user, n.roles)).map((n) => {
-              const active = n.href === "/admin/" ? path === "/admin/" || path.startsWith("/admin/evento") : path.startsWith(n.href);
+              const active = n.match ? n.match(path) : path.startsWith(n.href);
               return (
                 <Link
-                  key={n.href}
+                  key={n.label}
                   href={n.href}
-                  className={cx("inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold", active ? "bg-white text-green-900" : "text-white/85 hover:bg-white/10")}
+                  aria-current={active ? "page" : undefined}
+                  className={cx(
+                    "flex shrink-0 items-center gap-3 rounded-[10px] border p-3 text-[15px]",
+                    active ? "border-sage bg-mist font-bold text-pine" : "border-transparent font-semibold text-text-2 hover:bg-mist",
+                  )}
                 >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    {n.icon}
+                  </svg>
                   {n.label}
                 </Link>
               );
             })}
           </nav>
         )}
-      </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
-        {!allowed ? (
-          <Spinner />
-        ) : (
-          <>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
-              <h1 className="text-2xl font-extrabold">{title}</h1>
-              {actions}
-            </div>
-            <Suspense fallback={<Spinner />}>{children(auth.user)}</Suspense>
-          </>
-        )}
-      </main>
-    </>
+
+        <main className="flex min-w-0 flex-1 flex-col gap-[22px] p-4 sm:p-7">
+          {!allowed ? (
+            <Spinner />
+          ) : (
+            <>
+              {(title || actions) && (
+                <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
+                  {title && <h1 className="text-[26px] font-extrabold">{title}</h1>}
+                  {actions}
+                </div>
+              )}
+              <Suspense fallback={<Spinner />}>{children(auth.user)}</Suspense>
+            </>
+          )}
+        </main>
+      </div>
+    </div>
   );
 }
